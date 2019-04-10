@@ -1,0 +1,125 @@
+﻿import numpy as np
+z = 0
+conversionFactor = 2**np.arange(8)[::-1]
+print(conversionFactor)
+#FUNCTION DEFINITIONS
+
+def objectiveFunction(X):
+    x1=X[0]
+    x2=X[1]
+    z1=0
+    z2=0
+    z=0
+    for i in range(1,6):
+        z1 = z1 + i*np.cos((i+1)*x1 + i)
+        z2 = z2 + i*np.cos((i+1)*x2 + i)
+    z = z1*z2
+    return z
+
+def parent_gen():
+    for i in range(0,50):
+        for j in range(0,16):
+            parentSetBinary[i][j] = np.random.randint(0,2)
+            parentSetBinaryCurrent[i][j] = parentSetBinary[i][j]
+
+def evaluateChromosome(x):
+    x1Arr = x[:8]
+    x2Arr = x[8:16]
+    x1 = x1Arr.dot(conversionFactor)
+    x2 = x2Arr.dot(conversionFactor)
+    y=[x1,x2]
+    zValue = objectiveFunction(y)
+    return (zValue)
+
+def binaryToDecimal(x):
+    x1Arr = x[:8]
+    x2Arr = x[8:16]
+    x1 = x1Arr.dot(conversionFactor)
+    x2 = x2Arr.dot(conversionFactor)
+    return x1,x2
+
+def tournamentSelection():
+    warriors = np.random.randint(0,50,size=2)
+    warrior1 = parentSetBinaryCurrent[warriors[0]]
+    warrior2 = parentSetBinaryCurrent[warriors[1]]
+    warrior1Score = evaluateChromosome(warrior1)
+    warrior2Score = evaluateChromosome(warrior2)
+    if(warrior1Score <= warrior2Score):
+        return (warrior1)
+    else:
+        return (warrior2)
+
+def crossover(X):
+    x1 = X[0][0:17]
+    x2 = X[1][0:17]
+    k = np.random.randint(1,16,size=2)
+    upper = np.amax(k)
+    lower = np.amin(k)
+    x1Temp = x1[lower:upper]
+    x2Temp = x2[lower:upper]
+    x1[lower:upper] = x2Temp
+    x2[lower:upper] = x1Temp
+    x1[16] = evaluateChromosome(x1)
+    x2[16] = evaluateChromosome(x2)
+    return ([x1,x2])
+
+def mutation(X):
+    for i in range(0,16):
+        k=np.random.randint(0,100)
+        if k<=19:
+            if X[i]==0:
+                X[i]==1
+            else:
+                X[i]==0
+    return X
+#ITERATIONS
+
+parentSetBinary = np.zeros((50, 17))
+parentSetBinaryCurrent = np.zeros((50, 17))
+parent_gen()
+for i in range(0,500):
+    #initialising the new population of that generation
+    for i in range(0,50):
+        score = evaluateChromosome(parentSetBinary[i])
+        parentSetBinary[i][16] = score
+    parentSetBinaryCurrent = parentSetBinary 
+    #Tournament Selection of the new Population
+    for i in range(0,50):
+        parentSetBinary[i][:] = tournamentSelection()
+    #Crossover of the new Population
+    cross = []
+    crossovers = np.random.randint(0,100,size=25)
+    for i in crossovers:
+        if i<=80 and i!=0:
+            cross.append(1)
+        else:
+            cross.append(0)
+    for i in range(0,25):
+        if cross[i]==1:
+            y1 = parentSetBinary[2*i]
+            y2 = parentSetBinary[2*i + 1]
+            Y = [y1,y2]
+            Y = crossover(Y)
+            parentSetBinary[2*i] = Y[0]
+            parentSetBinary[2*i+1] = Y[1]
+    #Mutation of the new Population
+    for i in range(0,50):
+        X = mutation(parentSetBinary[i])
+        parentSetBinary[i] = X
+#Calculations
+
+for i in range(0,50):
+        score = evaluateChromosome(parentSetBinary[i])
+        parentSetBinary[i][16] = score
+optimumValue = parentSetBinary[0][16]
+x1Opt,x2Opt = binaryToDecimal(parentSetBinary[0])
+print ("Optimum x1 value is : " + str(x1Opt))
+print ("Optimum x2 value is : " + str(x2Opt))
+print ("Optimum Z value is : " + str(optimumValue) )
+
+ANSWER :
+
+Optimum x1 value is : 5.0
+Optimum x2 value is : 175.0
+Optimum Z value is : -113.12262344911896
+
